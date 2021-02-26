@@ -1,5 +1,18 @@
 # DependabotCodeCommit
 
+## Use case
+
+CodeCommit has the following advantages over GitHub:
+
+- Use IAM Roles to manage access to your repos
+- Easily integrate into services such as CodeBuild and CodePipeline
+- No longer worry about properly storing GitHub credentials in AWS
+- Leverage [Amazon CodeGuru Reviewer](https://aws.amazon.com/codeguru/)
+
+However you still want to leverage [Dependabot](https://dependabot.com/) for automated dependency updates.
+
+## History
+
 - This repo is a fork of [thegonch/dependabot-codecommit](https://github.com/thegonch/dependabot-codecommit])
 - which is a fork of [dependabot/dependabot-script](https://github.com/dependabot/dependabot-script)
 
@@ -19,7 +32,7 @@ Why another fork?
 
 ## Prerequisites
 
-### Github Personal Access Token
+### GitHub Personal Access Token
 
 You will need to provide a [Github Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token) with full `repo` access.
 
@@ -48,7 +61,7 @@ following permissions (update the Resource ARNS based on your requirements)
         "codecommit:CreateBranch",
         "codecommit:CreateCommit",
         "codecommit:CreatePullRequest"
-      ]
+      ],
       "Resource": [
         "arn:aws:codecommit:us-east-1:123456789012:myreponame"
       ]
