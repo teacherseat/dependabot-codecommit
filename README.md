@@ -8,6 +8,7 @@ CodeCommit has the following advantages over GitHub:
 - Easily integrate into services such as CodeBuild and CodePipeline
 - No longer worry about properly storing GitHub credentials in AWS
 - Leverage [Amazon CodeGuru Reviewer](https://aws.amazon.com/codeguru/)
+- More cost-effective than GitHub (Github: $4 per user, CodeCommit: $1 per active user)
 
 However you still want to leverage [Dependabot](https://dependabot.com/) for automated dependency updates.
 
