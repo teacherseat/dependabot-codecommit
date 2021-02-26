@@ -5,6 +5,8 @@ require 'dependabot/file_updaters'
 require 'dependabot/pull_request_creator'
 require 'dependabot/omnibus'
 require 'aws-sdk-codecommit'
+require 'logger'
+require 'fileutils'
 
 module DependabotCodecommit
   module Error
@@ -30,7 +32,15 @@ module DependabotCodecommit
     # github_personal_token: Github Personal Access Token (read access to repo)
     # aws_region:            AWS Region of CodeComit eepo
     # package_managers:      List of package managers to run vulnerability checks against
-    def self.run repo_name:, base_path:, :branch, github_access_token:, aws_region:, package_managers:
+    def self.run repo_name:, base_path:, :branch, github_access_token:, aws_region:, package_managers:, log_file:
+
+      logfile_basepath = Dir.base log_file
+      FileUtils.mkdir_p logfile_basepath
+
+      logger = Logger.new(log_file)
+      logger.level = :info
+      logger.info '= run [START]'
+
       credentials = [{
         type: 'git_source',
         host: 'github.com',
@@ -39,6 +49,7 @@ module DependabotCodecommit
       }]
 
       source = self.source({
+        logger: logger,
         aws_region: aws_region,
         repo_name: repo_name,
         base_path: base_path,
@@ -47,12 +58,14 @@ module DependabotCodecommit
 
       package_managers.each do |package_manager|
         fetch_results = fetch_dependency_files({
+          logger: logger,
           package_manager: package_manager,
           source: source,
           credentials: credentials
         })
 
         dependencies = self.parse_dependency_files({
+          logger: logger,
           package_manager: package_manager,
           source: source,
           credentials: credentials,
@@ -62,9 +75,10 @@ module DependabotCodecommit
         dependencies.select(&:top_level?).each do |dependency|
           begin
             updated_dependencies = self.check_for_updates({
+              logger: logger,
               package_manager: package_manager,
               dependency: dependency,
-              files: files,
+              files: fetch_results[:files],
               credentials: credentials
             })
           rescue DependabotCodecommit::Error::UpdateNotPossible
@@ -73,12 +87,14 @@ module DependabotCodecommit
             next
           end
           updated_files = self.update_dependency_files({
+            logger: logger,
             package_manager: package_manager,
             dependencies: updated_dependencies,
-            files: files,
+            files: fetch_results[:files],
             credentials: credentials
           })
           pull_request = self.create_pull_request({
+            logger: logger,
             source: source,
             commit: fetch_results[:commit],
             dependencies: updated_dependencies,
@@ -86,11 +102,13 @@ module DependabotCodecommit
             credentials: credentials
           })
         end
-      end
+      end # dependencies.select
+      logger.info '= run [END]'
     end
 
     # returns source
-    def self.source aws_region:, repo_name:, base_path:, branch:
+    def self.source logger:, aws_region:, repo_name:, base_path:, branch:
+      logger.info 'source'
       Dependabot::Source.new({
         provider: 'codecommit',
         hostname: aws_region
@@ -101,7 +119,8 @@ module DependabotCodecommit
     end
 
     # returns files and commit
-    def self.fetch_dependency_files package_manager:, source:, credentials:
+    def self.fetch_dependency_files logger:, package_manager:, source:, credentials:
+      logger.info 'fetch_dependency_files'
       fetcher = Dependabot::FileFetchers.for_package_manager(package_manager).new({
         source: source,
         credentials: credentials
@@ -113,7 +132,8 @@ module DependabotCodecommit
     end
 
     # returns dependencies
-    def self.parse_dependency_files package_manager:, source:, credentials:, files:
+    def self.parse_dependency_files logger:, package_manager:, source:, credentials:, files:
+      logger.info 'parse_dependency_files'
       parser = Dependabot::FileParsers.for_package_manager(package_manager).new(
         dependency_files: files,
         source: source,
@@ -123,7 +143,8 @@ module DependabotCodecommit
     end
 
     # returns updated dependencies
-    def self.check_for_updates package_manager:, dependency:, files:, credentials:
+    def self.check_for_updates logger:, package_manager:, dependency:, files:, credentials:
+      logger.info 'check_for_updates'
       checker = Dependabot::UpdateCheckers.for_package_manager(package_manager).new({
         dependency: dependency,
         dependency_files: files,
@@ -150,7 +171,8 @@ module DependabotCodecommit
     end
 
     # return updated_files
-    def self.update_dependency_files package_manager:, dependencies:, files:, credentials:
+    def self.update_dependency_files logger:, package_manager:, dependencies:, files:, credentials:
+      logger.info 'update_dependency_files'
       updater = Dependabot::FileUpdaters.for_package_manager(package_manager).new({
         dependencies: dependencies,
         dependency_files: files,
@@ -160,7 +182,8 @@ module DependabotCodecommit
     end
 
     # returns pull_request
-    def self.create_pull_request source:, commit:, dependencies:, files:, credentials:
+    def self.create_pull_request logger:, source:, commit:, dependencies:, files:, credentials:
+      logger.info 'create_pull_request'
       pr_creator = Dependabot::PullRequestCreator.new({
         source: source,
         base_commit: commit,

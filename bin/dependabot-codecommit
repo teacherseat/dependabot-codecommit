@@ -26,12 +26,18 @@ end
 def show_help
   puts <<~HELP
     Usage: dependabot-codecommit [options]
+
+    You need to set an enviroment variable GITHUB_ACCESS_TOKEN with your personal access token that has full repo access
+
     Options:
-         --package-managers Package managers to scan eg. bundler docker
-         --repo-name        CodeCommit repo name
-         --base-path        Base path to dependency file (default to /)
-         --branch           CodeCommit branch (default to main)
-     -v, --version          Show version
+         --package-managers    Package managers to scan eg. bundler docker
+         --repo-name           CodeCommit repo name
+         --base-path           Base path to dependency file (default to /)
+         --branch              CodeCommit branch (default to main)
+         --profile             AWS Profile (default to default)
+         --region              AWS Region (default to us-east-1)
+         --logfile             Path to logfile (defaeult to /var/log/dependabot-codecommit.log)
+     -v, --version             Show version
   HELP
   exit 0
 end
@@ -50,7 +56,15 @@ parser = OptionParser.new do|opts|
   opts.on('--branch branch') do |branch|
     opts[:branch] = branch
   end
-
+  opts.on('--profile profile') do |profile|
+    opts[:profile] = profile
+  end
+  opts.on('--region region') do |region|
+    opts[:region] = region
+  end
+  opts.on('--logfile logfile') do |logfile|
+    opts[:logfile] = logfile
+  end
   opts.on('-h', '--help') do
     show_help
   end
@@ -58,6 +72,13 @@ parser = OptionParser.new do|opts|
     show_version
   end
 end
+
+
+opts[:base_path] ||= '/'
+opts[:branch]    ||= 'main'
+opts[:profile]   ||= 'default'
+opts[:region]    ||= 'us-east-1'
+opts[:logfile]   ||= '/var/log/dependabot-codecommit.log'
 
 if opts[:package_managers].nil? || (opts[:package_managers].split('m') - PACKAGE_MANAGERS).empty?
   puts "must be a space-delimited list from #{PACKAGE_MANAGERS}"
@@ -72,6 +93,8 @@ DependabotCodecommit::Runner.run({
   base_path: opts[:base_path],
   branch: opts[:branch],
   github_access_token: ENV['GITHUB_ACCESS_TOKEN'],
-  aws_region: ENV['AWS_REGION'],
-  package_managers: opts[:package_managers].split(',')
+  aws_region: opts[:region],
+  package_managers: opts[:package_managers].split(','),
+  aws_profile: opts[:profile],
+  log_file: opts[:logfile]
 })

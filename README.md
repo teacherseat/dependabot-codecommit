@@ -34,6 +34,7 @@ Why another fork?
 - [x] separate CLI and SDK for separate use cases
 - [x] refactor code into a stateless Plain Old Ruby Object (PORO)
 - [x] replace optimist for standard library OptionParser
+- [ ] be able to specify AWS profile
 - [ ] add detailed logging
 - [ ] add CloudFormation template to provision IAM Policy and AWS CodeBuild server
 - [ ] create cool graphic
@@ -49,6 +50,28 @@ Why another fork?
 You will need to provide a [Github Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token) with full `repo` access.
 
 Even though your repo is hosted in CodeCommit, Dependabot is a Github service so you need to authenicate via a github account.
+
+
+### Package Managers
+
+You will need to supply which package managers you want to scan:
+
+- bundler (ruby)
+- pip (python)
+- npm_and_yarn (nodejs)
+- maven (java)
+- gradle  (java)
+- cargo (rust)
+- hex (erland)
+- composer (php)
+- nuget (.NET)
+- dep (Golang)
+- go_modules (Golang)
+- elm (Elm)
+- submodules (git?)
+- docker
+- terraform
+- github_actions
 
 ### AWS Permissions
 
@@ -97,19 +120,24 @@ dependabot-codecommit \
   --branch main \
   --github_access_token my-github-personal-access-token \
   --aws_region us-east-1 \
-  --package_managers bundler,npm_and_yarn
+  --package_managers bundler,npm_and_yarn \
+  --logfile /tmp/dependabot.log \
+  --profile default
 ```
 
 ## DependabotCodeCommit SDK
 
 ```rb
+require 'dependabox-codecommit'
 DependabotCodecommit::Runner.run({
   repo_name: 'my_codecommit_repo',
   base_path: '/',
   branch: 'main',
   github_access_token: 'my-github-personal-access-token',
-  aws_region: 'us_east-1',
-  package_managers: ['bundler','npm_and_yarn']
+  aws_profile: 'default',
+  aws_region: 'us-east-1',
+  package_managers: ['bundler','npm_and_yarn'],
+  log_file: '/tmp/dependabot.log'
 })
 ```
 

@@ -30,7 +30,11 @@ module DependabotCodecommit
     # github_personal_token: Github Personal Access Token (read access to repo)
     # aws_region:            AWS Region of CodeComit eepo
     # package_managers:      List of package managers to run vulnerability checks against
-    def self.run repo_name:, base_path:, :branch, github_access_token:, aws_region:, package_managers:
+    # aws_profile            AWS Profile name
+    # log_file               Path to logfile
+    def self.run repo_name:, base_path:, branch:, github_access_token:, aws_region:, package_managers:, aws_profile:, log_file:
+      Aws.config.update region: aws_region, profile: aws_profile
+
       credentials = [{
         type: 'git_source',
         host: 'github.com',
@@ -93,7 +97,7 @@ module DependabotCodecommit
     def self.source aws_region:, repo_name:, base_path:, branch:
       Dependabot::Source.new({
         provider: 'codecommit',
-        hostname: aws_region
+        hostname: aws_region,
         repo: repo_name,
         directory: base_path,
         branch: branch

@@ -4,7 +4,7 @@ require 'dependabot_codecommit/version'
 
 Gem::Specification.new do |s|
   s.name          = 'dependabot-codecommit'
-  s.version       = DependabotCodeCommit::VERSION
+  s.version       = DependabotCodecommit::VERSION
   s.authors       = ['Andrew Brown']
   s.email         = ['andew@teacherseat.com']
   s.summary       = 'Dependabot CodeCommit'
