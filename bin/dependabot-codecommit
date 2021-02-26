@@ -1,0 +1,77 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+
+ENV['DEPENDABOT_NATIVE_HELPERS_PATH'] = "#{Dir.pwd}/native-helpers"
+ENV['PATH'] = [
+  ENV['PATH'],
+  ENV['DEPENDABOT_NATIVE_HELPERS_PATH'],
+  "#{ENV['DEPENDABOT_NATIVE_HELPERS_PATH']}/dep/bin",
+  '/terraform/bin',
+  '/python/bin',
+  '/go_modules/bin'
+].join(':')
+ENV['MIX_HOME'] = "#{ENV['DEPENDABOT_NATIVE_HELPERS_PATH']}/hex/mix"
+
+PACKAGE_MANAGERS = %w{
+  bundler pip npm_and_yarn maven gradle cargo hex composer nuget dep
+  go_modules elm submodules docker terraform github_actions
+}.freeze
+
+def show_version
+  puts "DependabotCodecommit v#{DependabotCodecommit::VERSION}"
+  exit 0
+end
+
+def show_help
+  puts <<~HELP
+    Usage: dependabot-codecommit [options]
+    Options:
+         --package-managers Package managers to scan eg. bundler docker
+         --repo-name        CodeCommit repo name
+         --base-path        Base path to dependency file (default to /)
+         --branch           CodeCommit branch (default to main)
+     -v, --version          Show version
+  HELP
+  exit 0
+end
+
+opts = {}
+parser = OptionParser.new do|opts|
+  opts.on('--package-managers packages') do |packages|
+    opts[:package_managers] = packages
+  end
+  opts.on('--repo-name name') do |name|
+    opts[:repo_name] = name
+  end
+  opts.on('--base-path path') do |path|
+    opts[:base_path] = path
+  end
+  opts.on('--branch branch') do |branch|
+    opts[:branch] = branch
+  end
+
+  opts.on('-h', '--help') do
+    show_help
+  end
+  opts.on('-v', '--version') do
+    show_version
+  end
+end
+
+if opts[:package_managers].nil? || (opts[:package_managers].split('m') - PACKAGE_MANAGERS).empty?
+  puts "must be a space-delimited list from #{PACKAGE_MANAGERS}"
+  exit 1
+end
+
+# Create the native helpers
+`./dependabot_helpers.sh`
+
+DependabotCodecommit::Runner.run({
+  repo_name: opts[:repo_name],
+  base_path: opts[:base_path],
+  branch: opts[:branch],
+  github_access_token: ENV['GITHUB_ACCESS_TOKEN'],
+  aws_region: ENV['AWS_REGION'],
+  package_managers: opts[:package_managers].split(',')
+})

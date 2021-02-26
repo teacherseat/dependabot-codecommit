@@ -1,63 +1,113 @@
-# Dependabot Update Script for AWS CodeCommit
+# DependabotCodeCommit
 
-This repo is a fork of [Dependabot Script][dependabot-script]
+- This repo is a fork of [thegonch/dependabot-codecommit](https://github.com/thegonch/dependabot-codecommit])
+- which is a fork of [dependabot/dependabot-script](https://github.com/dependabot/dependabot-script)
 
-## Setup and usage
+Why another fork?
 
-* `rbenv install` (Install Ruby version from `.ruby-version`)
-* `bundle install`
+- [x] package as ruby gem
+- [x] separate CLI and SDK for separate use cases
+- [x] refactor code into a stateless Plain Old Ruby Object (PORO)
+- [x] replace optimist for standard library OptionParser
+- [ ] add detailed logging
+- [ ] add CloudFormation template to provision IAM Policy and AWS CodeBuild server
+- [ ] create cool graphic
+- [ ] write informative and opinionated Hashnode blog post
 
-### Native helpers with `dependabot_helpers.sh`
 
-The Bash script [`dependabot_helpers.sh`][dependabot_helpers.sh] helps automate the installation of the
-Dependabot Native Helpers as described
-[here](https://github.com/dependabot/dependabot-script#native-helpers).
+# Setup and usage
 
-It is designed to be run from within
-[`aws_codecommit_update_script.rb`][aws_codecommit_update_script.rb] since this
-ruby script will first set up the required environment variables.
+## Prerequisites
+
+### Github Personal Access Token
+
+You will need to provide a [Github Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token) with full `repo` access.
+
+Even though your repo is hosted in CodeCommit, Dependabot is a Github service so you need to authenicate via a github account.
+
+### AWS Permissions
+
+Create a new policy called `DependabotCodeCommitPolicy` with the
+following permissions (update the Resource ARNS based on your requirements)
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "codecommit:ListPullRequests",
+        "codecommit:BatchGetCommits",
+        "codecommit:GetBranch",
+        "codecommit:GetCommit",
+        "codecommit:GetFile",
+        "codecommit:GetFolder",
+        "codecommit:GetPullRequest",
+        "codecommit:GetRepository",
+        "codecommit:CreateBranch",
+        "codecommit:CreateCommit",
+        "codecommit:CreatePullRequest"
+      ]
+      "Resource": [
+        "arn:aws:codecommit:us-east-1:123456789012:myreponame"
+      ]
+    }
+  ]
+}
+```
+
+Attach this policy to the users or codebuild roles.
+
+You want to use [aws-vault](https://github.com/99designs/aws-vault) to
+secure your AWS Credentials in your local development environment.
+
+## DependabotCodeCommit CLI
+
+```
+gem install dependabot-codecommit
+dependabot-codecommit \ 
+  --repo-name my_code_commit \
+  --base_path '/' \
+  --branch main \
+  --github_access_token my-github-personal-access-token \
+  --aws_region us-east-1 \
+  --package_managers bundler,npm_and_yarn
+```
+
+## DependabotCodeCommit SDK
+
+```rb
+DependabotCodecommit::Runner.run({
+  repo_name: 'my_codecommit_repo',
+  base_path: '/',
+  branch: 'main',
+  github_access_token: 'my-github-personal-access-token',
+  aws_region: 'us_east-1',
+  package_managers: ['bundler','npm_and_yarn']
+})
+```
+
+## DependabotCodeCommit Development
+
+```
+git clone git@github.com:teacherseat/dependabot-codecommit.git
+cd dependabot-codecommit
+bundle install
+```
+
+If you need to test the CLI locally
+
+```
+gem build dependabot-codecommit.gemspec
+gem install --local dependabot-codecommit-1-0-0.gem
+```
+
+# Native helpers with `dependabot_helpers.sh`
+
+The bash script [`dependabot_helpers.sh`][dependabot_helpers.sh] helps automate the installation of the Dependabot Native Helpers as described [here](https://github.com/dependabot/dependabot-script#native-helpers).
 
 It is currently designed to install all possible native helpers, which includes:
 Terraform, Python, Go (Dep & Modules), Elixir, PHP, JS
 
 This also helps preserve your existing environment variables, including your `PATH`.
-
-### Running `aws_codecommit_update_script.rb`
-
-* Please note the following pre-requisites before running this script
-  * An environment variable named `GITHUB_ACCESS_TOKEN` that contains a [personal
-    github token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token) with full `repo` access.
-  * An environment variable named `AWS_REGION` that passes in the name of the
-    AWS Region, i.e. `us-east-1`
-  * An AWS authentication (this script was run under the assumptive usage of
-    [aws-vault](https://github.com/99designs/aws-vault)) that has permissions allowing
-    CodeCommit access including:
-    * ListPullRequests
-    * BatchGetCommits
-    * GetBranch
-    * GetCommit
-    * GetFile
-    * GetFolder
-    * GetPullRequest
-    * GetRepository
-    * CreateBranch
-    * CreateCommit
-    * CreatePullRequest
-
-### To execute, run the script as follows from the command prompt:
-
- `ruby aws_codecommit_update_script.rb [options]`
-
-| Option Name   | Value   |   Required |
-| ------------- | ----------------------- | ---- |
-| -p, --package-manager-list  | space-delimited package manager(s) to run against from this list:`bundler pip npm_and_yarn maven gradle cargo hex composer nuget dep go_modules elm submodules docker terraform github_actions` | yes (this OR --all-package-managers)
-| -a, --all-package-managers     | run against all package managers (CANNOT be used with --package-manager-list)             | yes (this OR --package-manager-list)
-| -r, --project-path  | name of the AWS CodeCommit repository | yes
-| -d, --directory-path |  location of the base dependency files (default: /)     | no
-|  -c, --codecommit-branch     | branch of the AWS CodeCommit repository to check against (default: master) | no
-
-If you run into any trouble with the above please create an issue!
-
-[dependabot-script]: https://github.com/dependabot/dependabot-script
-[dependabot_helpers.sh]: dependabot_helpers.sh
-[aws_codecommit_update_script.rb]: aws_codecommit_update_script.rb
