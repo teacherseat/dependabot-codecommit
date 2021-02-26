@@ -36,7 +36,7 @@ def show_help
          --branch              CodeCommit branch (default to main)
          --profile             AWS Profile (default to default)
          --region              AWS Region (default to us-east-1)
-         --logfile             Path to logfile (defaeult to /var/log/dependabot-codecommit.log)
+         --logfile             Path to logfile (defaeult to /usr/local/var/log/dependabot-codecommit.log)
      -v, --version             Show version
   HELP
   exit 0
@@ -78,7 +78,7 @@ opts[:base_path] ||= '/'
 opts[:branch]    ||= 'main'
 opts[:profile]   ||= 'default'
 opts[:region]    ||= 'us-east-1'
-opts[:logfile]   ||= '/var/log/dependabot-codecommit.log'
+opts[:logfile]   ||= '/usr/local/var/log/dependabot-codecommit.log'
 
 if opts[:package_managers].nil? || (opts[:package_managers].split('m') - PACKAGE_MANAGERS).empty?
   puts "must be a space-delimited list from #{PACKAGE_MANAGERS}"

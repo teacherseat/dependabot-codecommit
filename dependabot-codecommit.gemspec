@@ -22,5 +22,6 @@ Gem::Specification.new do |s|
   s.add_dependency "dependabot-common", "~> 0.133.6"
   s.add_dependency "dependabot-omnibus", "~> 0.133.6"
   s.add_dependency "aws-sdk-codecommit"
+  s.add_dependency "pry"
 end
 
