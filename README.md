@@ -1,5 +1,16 @@
 # DependabotCodeCommit
 
+- [Use Case](#use-case)
+- [History](#history)
+- [Setup and usage](#setup-and-usage)
+  - [Prerequisites](#prerequisites)
+    - [GitHub Personal Access Token](#github-personal-access-token)
+    - [AWS Permissions](#aws-permissions)
+  - [DependabotCodeCommit CLI](#dependabotcodecommit-cli)
+  - [DependabotCodeCommit SDK](#dependabotcodecommit-sdk)
+  - [DependabotCodeCommit Development](#dependabotcodecommit-development)
+- [Native helpers](#native-helpers)
+
 ## Use case
 
 CodeCommit has the following advantages over GitHub:
@@ -117,7 +128,7 @@ gem build dependabot-codecommit.gemspec
 gem install --local dependabot-codecommit-1-0-0.gem
 ```
 
-# Native helpers with `dependabot_helpers.sh`
+# Native helpers
 
 The bash script [`dependabot_helpers.sh`][dependabot_helpers.sh] helps automate the installation of the Dependabot Native Helpers as described [here](https://github.com/dependabot/dependabot-script#native-helpers).
 
