@@ -130,7 +130,7 @@ gem install --local dependabot-codecommit-1-0-0.gem
 
 # Native helpers
 
-The bash script [`dependabot_helpers.sh`][dependabot_helpers.sh] helps automate the installation of the Dependabot Native Helpers as described [here](https://github.com/dependabot/dependabot-script#native-helpers).
+The bash script `dependabot_helpers.sh` helps automate the installation of the Dependabot Native Helpers as described [here](https://github.com/dependabot/dependabot-script#native-helpers).
 
 It is currently designed to install all possible native helpers, which includes:
 Terraform, Python, Go (Dep & Modules), Elixir, PHP, JS
